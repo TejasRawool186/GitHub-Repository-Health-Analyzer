@@ -81,7 +81,12 @@ export function parseGitHubUrl(url) {
 
         // Repository URL: https://github.com/owner/repo
         // Also handles: https://github.com/owner/repo/tree/main, etc.
-        return { type: 'repo', owner: pathParts[0], repo: pathParts[1] };
+        // Strip .git suffix if present
+        let repoName = pathParts[1];
+        if (repoName.endsWith('.git')) {
+            repoName = repoName.slice(0, -4);
+        }
+        return { type: 'repo', owner: pathParts[0], repo: repoName };
     } catch (error) {
         return { type: 'invalid', owner: null, repo: null };
     }
