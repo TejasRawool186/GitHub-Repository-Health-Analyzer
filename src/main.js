@@ -90,6 +90,20 @@ async function processRepository(octokit, owner, repo) {
             `${r.priority} [${r.category}] ${r.issue}: ${r.action}`
         ),
 
+        // Pillar rows for vertical display (NEW)
+        pillar_rows: [
+            { metric: '📊 Overall Score', value: `${healthResult.totalScore}/100`, grade: healthResult.grade },
+            { metric: '📖 Readability (15%)', value: `${healthResult.pillars.readability.score}/100`, status: healthResult.pillars.readability.score >= 70 ? '✅' : '⚠️' },
+            { metric: '🧱 Stability (15%)', value: `${healthResult.pillars.stability.score}/100`, status: healthResult.pillars.stability.score >= 70 ? '✅' : '⚠️' },
+            { metric: '🔐 Security (15%)', value: `${healthResult.pillars.security.score}/100`, status: healthResult.pillars.security.score >= 70 ? '✅' : '⚠️' },
+            { metric: '👥 Community (10%)', value: `${healthResult.pillars.community.score}/100`, status: healthResult.pillars.community.score >= 70 ? '✅' : '⚠️' },
+            { metric: '🛠️ Maintainability (15%)', value: `${healthResult.pillars.maintainability.score}/100`, status: healthResult.pillars.maintainability.score >= 70 ? '✅' : '⚠️' },
+            { metric: '📝 Documentation (15%)', value: `${healthResult.pillars.documentation.score}/100`, status: healthResult.pillars.documentation.score >= 70 ? '✅' : '⚠️' },
+            { metric: '🤖 Automation (15%)', value: `${healthResult.pillars.automation.score}/100`, status: healthResult.pillars.automation.score >= 70 ? '✅' : '⚠️' },
+            { metric: '⭐ Stars', value: repoData.stargazers_count.toLocaleString(), status: repoData.stargazers_count >= 100 ? '✅' : '⚠️' },
+            { metric: '📅 Last Commit', value: formatDate(repoData.pushed_at), status: '📆' },
+        ],
+
         // Metadata
         description: repoData.description || '',
         language: repoData.language || 'Unknown',
