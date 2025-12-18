@@ -1,0 +1,44 @@
+{
+    "title": "GitHub Health Scanner Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Repositories or Users to Scan",
+            "type": "array",
+            "description": "Enter GitHub Repo URLs (to scan one) or User Profile URLs (to scan all their public repos). Examples: https://github.com/facebook/react or https://github.com/apify",
+            "editor": "requestListSources",
+            "prefill": [
+                {
+                    "url": "https://github.com/apify/crawlee"
+                }
+            ]
+        },
+        "maxReposPerUser": {
+            "title": "Max Repos (Profile Scan)",
+            "type": "integer",
+            "description": "Limit how many repos to scan when a User Profile URL is provided. Set to 0 for unlimited.",
+            "default": 10,
+            "minimum": 0,
+            "maximum": 100
+        },
+        "githubToken": {
+            "title": "GitHub Token (Optional)",
+            "type": "string",
+            "description": "Provide a Personal Access Token (PAT) to increase API rate limits from 60 to 5000 requests/hour. Required for private repositories.",
+            "editor": "textfield",
+            "isSecret": true
+        },
+        "minHealthScore": {
+            "title": "Minimum Score Filter",
+            "type": "integer",
+            "description": "Only output results scoring above this threshold (0-100). Set to 0 to include all results.",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 100
+        }
+    },
+    "required": [
+        "startUrls"
+    ]
+}

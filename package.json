@@ -1,0 +1,22 @@
+{
+    "name": "github-health-analyzer",
+    "version": "1.0.0",
+    "description": "GitHub Repository Health Analyzer - Audit repos and get a Health Score (0-100)",
+    "type": "module",
+    "main": "src/main.js",
+    "scripts": {
+        "start": "node src/main.js",
+        "test": "node --test"
+    },
+    "author": "Tejas Rawool",
+    "license": "MIT",
+    "dependencies": {
+        "apify": "^3.1.0",
+        "crawlee": "^3.5.0",
+        "octokit": "^3.1.0",
+        "dotenv": "^16.3.0"
+    },
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}

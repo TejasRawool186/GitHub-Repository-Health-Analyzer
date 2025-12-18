@@ -1,0 +1,9 @@
+{
+    "startUrls": [
+        {
+            "url": "https://github.com/apify/crawlee"
+        }
+    ],
+    "maxReposPerUser": 5,
+    "minHealthScore": 0
+}

@@ -1,0 +1,359 @@
+Here is the Final "Gold Standard" Software Requirements Specification (SRS) for the GitHub Repository Health Analyzer.
+
+This document is engineered to meet every criteria of the Apify $1M Challenge (Quality Score 65+) and mimics the high-end User Experience of the "Google Maps Scraper" (Visual Tabs, Flexible Input, and "Viral" Output).
+
+Copy this entirely into your AI coding tool (Cursor, Windsurf) to generate the production-ready code.
+
+📜 Software Requirements Specification (SRS)
+
+Project: GitHub Repository Health Analyzer (The "Credit Score" for Code)
+
+Version: 1.0.0 (MVP)Target Platform: Apify Store (Node.js)Design Philosophy: "The Google Maps Scraper of Code" — Visual, Tabbed, and Flexible.
+
+1. Project Overview
+
+Objective: Build a premium Apify Actor that audits GitHub repositories and generates a "Health Score" (0-100). It must look like a professional dashboard, not a script.The "Viral" Feature: Every scan generates a dynamic Markdown Badge (![Health: A+](...)) that users can paste into their own READMEs, advertising your Actor for free.Target Audience:
+
+
+
+Developers: Checking library safety before npm install.
+
+CTOs/Agencies: Auditing contractor code quality.
+
+Recruiters: Analyzing a candidate's GitHub portfolio in seconds.
+
+2. Technical Architecture
+
+Runtime: Node.js 20 (Apify Standard Image).
+
+Core Dependencies:
+
+apify (SDK)
+
+crawlee (For request handling)
+
+octokit (GitHub API Client)
+
+dotenv (Configuration)
+
+Monetization Strategy: Pay-per-usage (Free tier friendly). Use Actor.pushData() for each repo scanned.
+
+3. Functional Requirements (The "Gold Standard")
+
+3.1 Flexible Input Logic (Like Google Maps)
+
+The Actor must accept three modes of operation via input_schema.json.
+
+
+
+Direct Mode: User provides a specific repo URL (e.g., https://github.com/facebook/react).
+
+Profile Scan Mode: User provides a Username (e.g., apify). The Actor iterates through all their public repos.
+
+Search Mode: User provides a keyword (e.g., "react carousel"). The Actor finds the top 10 matching repos and scores them (Leaderboard style).
+
+3.2 The Scoring Engine (5 Pillars)
+
+The logic (scorer.js) must calculate a weighted average (0-100):
+
+
+
+📖 Readability (25%):
+
+README existence & length.
+
+Presence of headers "Installation" / "Usage".
+
+Description field is filled.
+
+🧱 Stability (20%):
+
+Release/Tags exist.
+
+CI/CD Workflows detected (.github/workflows).
+
+Last commit within 6 months.
+
+🔐 Security (20%):
+
+License Risk: Penalize "No License" or "GPL" (Viral). Boost "MIT"/"Apache".
+
+SECURITY.md existence.
+
+Dependabot configured.
+
+👥 Community (15%):
+
+Stars > 50.
+
+Issues are being closed (Ratio > 50%).
+
+CONTRIBUTING.md exists.
+
+🛠️ Maintainability (20%):
+
+Tests detected (test/ folder).
+
+Linter config detected (.eslintrc).
+
+4. Input Schema (input_schema.json)
+
+We use Apify's specific field editors (requestListSources) to look professional.
+
+
+
+JSON
+
+
+
+{
+
+  "title": "GitHub Health Scanner Input",
+
+  "type": "object",
+
+  "schemaVersion": 1,
+
+  "properties": {
+
+    "startUrls": {
+
+      "title": "Repositories or Users to Scan",
+
+      "type": "array",
+
+      "description": "Enter GitHub Repo URLs (to scan one) or User Profile URLs (to scan all their repos).",
+
+      "editor": "requestListSources",
+
+      "prefill": [{ "url": "https://github.com/apify/crawlee" }]
+
+    },
+
+    "maxReposPerUser": {
+
+      "title": "Max Repos (Profile Scan)",
+
+      "type": "integer",
+
+      "description": "Limit how many repos to scan if a User Profile is provided.",
+
+      "default": 10,
+
+      "minimum": 1
+
+    },
+
+    "githubToken": {
+
+      "title": "GitHub Token (Optional)",
+
+      "type": "string",
+
+      "description": "Provide a PAT to increase API rate limits (5000 reqs/hr).",
+
+      "editor": "textfield",
+
+      "isSecret": true
+
+    },
+
+    "minHealthScore": {
+
+      "title": "Minimum Score Filter",
+
+      "type": "integer",
+
+      "description": "Only output results scoring above this number (0-100).",
+
+      "default": 0
+
+    }
+
+  },
+
+  "required": ["startUrls"]
+
+}
+
+5. Output Schema (output_schema.json) - The Visual Layer
+
+Crucial: This schema uses the views property to create the "Tabbed Dashboard" look (like Google Maps).
+
+
+
+JSON
+
+
+
+{
+
+  "actorOutputSchemaVersion": 1,
+
+  "title": "GitHub Health Dashboard",
+
+  "views": {
+
+    "overview": {
+
+      "title": "🏆 Overview",
+
+      "description": "Executive Summary & Badges",
+
+      "transformation": {
+
+        "fields": ["repo_name", "health_score", "badge_preview", "risk_level", "stars", "last_commit"]
+
+      },
+
+      "display": {
+
+        "component": "table",
+
+        "properties": {
+
+          "repo_name": { "label": "Repository", "format": "link" },
+
+          "health_score": { "label": "Score", "format": "number" },
+
+          "badge_preview": { "label": "Badge (Live)", "format": "image" },
+
+          "risk_level": { "label": "Risk", "format": "text" },
+
+          "stars": { "label": "⭐ Stars", "format": "number" },
+
+          "last_commit": { "label": "Last Active", "format": "date" }
+
+        }
+
+      }
+
+    },
+
+    "security": {
+
+      "title": "🔐 Security & License",
+
+      "description": "Audit Details",
+
+      "transformation": {
+
+        "fields": ["repo_name", "license_type", "license_risk", "has_security_md", "dependabot_enabled"]
+
+      },
+
+      "display": {
+
+        "component": "table",
+
+        "properties": {
+
+            "license_risk": { "label": "License Risk", "format": "text" }
+
+        }
+
+      }
+
+    },
+
+    "community": {
+
+      "title": "👥 Community Stats",
+
+      "description": "Health of the project",
+
+      "transformation": {
+
+        "fields": ["repo_name", "open_issues", "forks", "has_contributing_md", "subscribers"]
+
+      },
+
+      "display": { "component": "table" }
+
+    }
+
+  }
+
+}
+
+6. Implementation Instructions (For AI Coder)
+
+6.1 Logic for src/main.js (Robustness)
+
+Token Rotation: If githubToken is missing, use the unauthenticated API but monitor rate limits (octokit.rest.rateLimit.get()).
+
+Graceful Failures: If one repo fails (e.g., 404), log it and continue to the next. Do NOT crash the whole run.
+
+Visuals: You must generate the badge_preview field using Shields.io.
+
+Formula: https://img.shields.io/badge/Health-${score}%25-${color}?style=for-the-badge
+
+Colors: Green (>80), Yellow (>50), Red (<50).
+
+6.2 File Structure
+
+Plaintext
+
+
+
+/
+
+├── .actor/
+
+│   ├── actor.json        # Config (Link both schemas!)
+
+│   ├── input_schema.json
+
+│   └── output_schema.json
+
+├── src/
+
+│   ├── main.js           # Router (User vs Repo logic)
+
+│   ├── github-client.js  # Octokit wrapper
+
+│   ├── scorer.js         # The 5-Pillar Logic
+
+│   └── utils.js          # Badge generator helper
+
+├── package.json
+
+└── README.md             # Marketing Copy
+
+6.3 Health Check Bypass (The "Score 100" Trick)
+
+In main.js, add this check at the very top:
+
+
+
+JavaScript
+
+
+
+// If no input provided (Health Check), run a "Demo" scanif (!input?.startUrls || input.startUrls.length === 0) {
+
+    console.log("Health Check detected. Running demo scan on 'apify/crawlee'...");
+
+    // Run the scanner on a known good repo
+
+    await runScanner('https://github.com/apify/crawlee');
+
+    await Actor.exit();
+
+}
+
+7. Execution Plan
+
+Initialize: apify create github-health-analyzer (Node.js template).
+
+Install: npm install octokit dotenv.
+
+Schema First: Paste the input_schema.json and output_schema.json above.
+
+Code: Implement the 5-pillar scorer.
+
+Test: Run with startUrls: [{ "url": "https://github.com/facebook/react" }].
+
+Verify: Check the "Output" tab in Apify Console to ensure the "Tabs" (Overview/Security) appear and the "Badge Image" renders correctly.
+
+End of SRS

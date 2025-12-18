@@ -1,0 +1,336 @@
+{
+  "actorSpecification": 1,
+  "name": "github-health-analyzer",
+  "title": "GitHub Repository Health Analyzer",
+  "description": "Audit GitHub repositories and get a 'Health Score' (0-100). Analyze 7 pillars: Readability, Stability, Security, Community, Maintainability, Documentation, and Automation. Get actionable recommendations!",
+  "version": "1.1.0",
+  "buildTag": "latest",
+  "meta": {
+    "templateId": "js-start"
+  },
+  "input": "./input_schema.json",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "title": "GitHub Health Dashboard",
+      "views": {
+        "overview": {
+          "title": "🏆 Overview",
+          "description": "Executive Summary & Badges",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "repo_url",
+              "health_score",
+              "health_grade",
+              "badge_url",
+              "risk_level",
+              "recommendation_count",
+              "stars",
+              "last_commit"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "repo_url": {
+                "label": "URL",
+                "format": "link"
+              },
+              "health_score": {
+                "label": "Score",
+                "format": "number"
+              },
+              "health_grade": {
+                "label": "Grade",
+                "format": "text"
+              },
+              "badge_url": {
+                "label": "Badge",
+                "format": "image"
+              },
+              "risk_level": {
+                "label": "Risk",
+                "format": "text"
+              },
+              "recommendation_count": {
+                "label": "💡 Tips",
+                "format": "number"
+              },
+              "stars": {
+                "label": "⭐ Stars",
+                "format": "number"
+              },
+              "last_commit": {
+                "label": "Last Active",
+                "format": "date"
+              }
+            }
+          }
+        },
+        "recommendations": {
+          "title": "💡 Recommendations",
+          "description": "Actionable improvement suggestions",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "health_score",
+              "recommendation_count",
+              "top_recommendations"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "health_score": {
+                "label": "Score",
+                "format": "number"
+              },
+              "recommendation_count": {
+                "label": "# Tips",
+                "format": "number"
+              },
+              "top_recommendations": {
+                "label": "Top Improvements",
+                "format": "text"
+              }
+            }
+          }
+        },
+        "scores": {
+          "title": "📊 Pillar Scores",
+          "description": "Breakdown by 7 categories",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "readability_score",
+              "stability_score",
+              "security_score",
+              "community_score",
+              "maintainability_score",
+              "documentation_score",
+              "automation_score"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "readability_score": {
+                "label": "📖 Readability (15%)",
+                "format": "number"
+              },
+              "stability_score": {
+                "label": "🧱 Stability (15%)",
+                "format": "number"
+              },
+              "security_score": {
+                "label": "🔐 Security (15%)",
+                "format": "number"
+              },
+              "community_score": {
+                "label": "👥 Community (10%)",
+                "format": "number"
+              },
+              "maintainability_score": {
+                "label": "🛠️ Maintain (15%)",
+                "format": "number"
+              },
+              "documentation_score": {
+                "label": "📝 Docs (15%)",
+                "format": "number"
+              },
+              "automation_score": {
+                "label": "🤖 Automation (15%)",
+                "format": "number"
+              }
+            }
+          }
+        },
+        "security": {
+          "title": "🔐 Security & License",
+          "description": "Security audit details",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "license_type",
+              "license_risk",
+              "has_security_md",
+              "dependabot_enabled"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "license_type": {
+                "label": "License",
+                "format": "text"
+              },
+              "license_risk": {
+                "label": "License Risk",
+                "format": "text"
+              },
+              "has_security_md": {
+                "label": "SECURITY.md",
+                "format": "text"
+              },
+              "dependabot_enabled": {
+                "label": "Dependabot",
+                "format": "text"
+              }
+            }
+          }
+        },
+        "documentation": {
+          "title": "📝 Documentation",
+          "description": "Documentation quality audit",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "documentation_score",
+              "has_docs_folder",
+              "has_changelog",
+              "has_examples",
+              "has_wiki"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "documentation_score": {
+                "label": "Score",
+                "format": "number"
+              },
+              "has_docs_folder": {
+                "label": "docs/",
+                "format": "text"
+              },
+              "has_changelog": {
+                "label": "CHANGELOG",
+                "format": "text"
+              },
+              "has_examples": {
+                "label": "examples/",
+                "format": "text"
+              },
+              "has_wiki": {
+                "label": "Wiki",
+                "format": "text"
+              }
+            }
+          }
+        },
+        "automation": {
+          "title": "🤖 Automation",
+          "description": "CI/CD and automation audit",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "automation_score",
+              "workflow_count",
+              "has_pr_template",
+              "has_issue_template",
+              "has_code_of_conduct"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "automation_score": {
+                "label": "Score",
+                "format": "number"
+              },
+              "workflow_count": {
+                "label": "Workflows",
+                "format": "number"
+              },
+              "has_pr_template": {
+                "label": "PR Template",
+                "format": "text"
+              },
+              "has_issue_template": {
+                "label": "Issue Template",
+                "format": "text"
+              },
+              "has_code_of_conduct": {
+                "label": "CoC",
+                "format": "text"
+              }
+            }
+          }
+        },
+        "community": {
+          "title": "👥 Community",
+          "description": "Community health stats",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "stars",
+              "forks",
+              "open_issues",
+              "issue_close_ratio",
+              "has_contributing_md",
+              "subscribers"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "stars": {
+                "label": "⭐ Stars",
+                "format": "number"
+              },
+              "forks": {
+                "label": "🍴 Forks",
+                "format": "number"
+              },
+              "open_issues": {
+                "label": "Open Issues",
+                "format": "number"
+              },
+              "issue_close_ratio": {
+                "label": "Close Ratio",
+                "format": "text"
+              },
+              "has_contributing_md": {
+                "label": "CONTRIBUTING",
+                "format": "text"
+              },
+              "subscribers": {
+                "label": "Watchers",
+                "format": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
