@@ -170,4 +170,4 @@ If you encounter any issues or have suggestions, please open an issue on the Act
 
 ---
 
-Made with ❤️ for the Apify $1M Challenge
+Made with ❤️ for the Apify Community
