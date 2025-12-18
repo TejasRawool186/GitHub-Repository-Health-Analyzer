@@ -267,22 +267,24 @@ async function main() {
     log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     // Generate combined dashboard HTML for all results
-    const allResults = await Actor.openDataset().then(ds => ds.getData());
-    if (allResults.items && allResults.items.length > 0) {
-        const dashboardHtml = generateCombinedDashboard(allResults.items);
-        const store = await Actor.openKeyValueStore();
+    try {
+        const dataset = await Actor.openDataset();
+        const allResults = await dataset.getData();
 
-        // Save as OUTPUT - this enables "Preview in new tab" button
-        await store.setValue('OUTPUT', dashboardHtml, { contentType: 'text/html' });
+        if (allResults.items && allResults.items.length > 0) {
+            const dashboardHtml = generateCombinedDashboard(allResults.items);
+            const store = await Actor.openKeyValueStore();
 
-        // Get the public URL for the OUTPUT
-        const storeInfo = await store.getInfo();
-        const previewUrl = `https://api.apify.com/v2/key-value-stores/${storeInfo.id}/records/OUTPUT`;
+            // Save as OUTPUT - this enables "Preview in new tab" button
+            await store.setValue('OUTPUT', dashboardHtml, { contentType: 'text/html' });
 
-        log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        log.info('🎨 VISUAL DASHBOARD READY!');
-        log.info(`   View your results: ${previewUrl}`);
-        log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            log.info('🎨 VISUAL DASHBOARD READY!');
+            log.info('   Click "Preview in new tab" to see your results');
+            log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        }
+    } catch (error) {
+        log.warning(`⚠️ Could not generate visual dashboard: ${error.message}`);
     }
 
     // Exit the Actor
