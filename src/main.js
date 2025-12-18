@@ -172,6 +172,16 @@ async function main() {
         if (result) {
             await Actor.pushData(result);
             log.info(`✅ Demo scan complete. Score: ${result.health_score} (${result.health_grade})`);
+
+            // Generate dashboard for demo mode too
+            try {
+                const dashboardHtml = generateCombinedDashboard([result]);
+                const store = await Actor.openKeyValueStore();
+                await store.setValue('OUTPUT', dashboardHtml, { contentType: 'text/html' });
+                log.info('🎨 VISUAL DASHBOARD READY! Click "Preview in new tab" to view');
+            } catch (error) {
+                log.warning(`⚠️ Could not generate dashboard: ${error.message}`);
+            }
         }
 
         await Actor.exit();
