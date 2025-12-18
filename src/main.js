@@ -86,9 +86,10 @@ async function processRepository(octokit, owner, repo) {
         // Recommendations (NEW)
         recommendation_count: healthResult.recommendationCount,
         recommendations: healthResult.recommendations,
-        top_recommendations: healthResult.recommendations.slice(0, 5).map(r =>
-            `${r.priority} [${r.category}] ${r.issue}: ${r.action}`
-        ),
+        // Short format for table display (prevents horizontal scroll)
+        top_recommendations: healthResult.recommendations.slice(0, 3).map(r =>
+            `${r.priority === '🔴 Critical' ? '🔴' : r.priority === '🟡 Medium' ? '🟡' : '🟢'} ${r.issue.substring(0, 40)}${r.issue.length > 40 ? '...' : ''}`
+        ).join(' | '),
 
         // Pillar rows for vertical display (NEW)
         pillar_rows: [
