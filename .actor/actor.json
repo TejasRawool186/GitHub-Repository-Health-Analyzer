@@ -180,6 +180,39 @@
               }
             }
           }
+        },
+        "dashboard": {
+          "title": "🎨 Dashboard",
+          "description": "View Visual Dashboard",
+          "transformation": {
+            "fields": [
+              "repo_name",
+              "health_score",
+              "health_grade",
+              "dashboard_info"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "repo_name": {
+                "label": "Repository",
+                "format": "text"
+              },
+              "health_score": {
+                "label": "Score",
+                "format": "number"
+              },
+              "health_grade": {
+                "label": "Grade",
+                "format": "text"
+              },
+              "dashboard_info": {
+                "label": "📊 How to View Visual Dashboard",
+                "format": "text"
+              }
+            }
+          }
         }
       }
     }

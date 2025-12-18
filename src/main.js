@@ -49,6 +49,9 @@ async function processRepository(octokit, owner, repo) {
         forks: repoData.forks_count,
         last_commit: formatDate(repoData.pushed_at),
 
+        // Dashboard instructions
+        dashboard_info: '📊 Go to Storage → Key-Value Store → OUTPUT to see the visual dashboard!',
+
         // Security fields
         license_type: repoData.license?.name || 'No License',
         license_risk: healthResult.pillars.security.details.licenseRisk,
