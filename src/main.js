@@ -10,6 +10,7 @@ import { Actor, log } from 'apify';
 import { createGitHubClient, getRepoData, getUserRepos, checkRateLimit } from './github-client.js';
 import { calculateHealthScore } from './scorer.js';
 import { parseGitHubUrl, generateBadgeUrl, formatDate } from './utils.js';
+import { generateHtmlReport, generateMarkdownSummary } from './report-generator.js';
 
 // Demo repository for health checks (when no input provided)
 const DEMO_REPO_URL = 'https://github.com/apify/crawlee';
@@ -110,6 +111,22 @@ async function processRepository(octokit, owner, repo) {
         // Timestamps
         analyzed_at: new Date().toISOString(),
     };
+
+    // Generate visual reports
+    const htmlReport = generateHtmlReport(result);
+    const markdownSummary = generateMarkdownSummary(result);
+
+    // Add reports to result
+    result.html_report = htmlReport;
+    result.markdown_summary = markdownSummary;
+
+    // Save HTML report to key-value store
+    const store = await Actor.openKeyValueStore();
+    const safeRepoName = `${owner}_${repo}`.replace(/[^a-zA-Z0-9-_]/g, '_');
+    await store.setValue(`report_${safeRepoName}.html`, htmlReport, { contentType: 'text/html' });
+    log.info(`📄 HTML report saved: report_${safeRepoName}.html`);
+
+    return result;
 }
 
 /**
