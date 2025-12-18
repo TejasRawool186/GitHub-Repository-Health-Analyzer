@@ -401,17 +401,17 @@ export function generateCombinedDashboard(results) {
         .rec-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 16px;
         }
 
         .rec-item {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
-            padding: 14px 16px;
+            gap: 16px;
+            padding: 20px;
             background: var(--bg-secondary);
-            border-radius: 10px;
-            border-left: 3px solid;
+            border-radius: 12px;
+            border-left: 4px solid;
             transition: all 0.2s ease;
         }
 
@@ -424,38 +424,111 @@ export function generateCombinedDashboard(results) {
         .rec-item.medium { border-color: var(--accent-yellow); }
         .rec-item.nice { border-color: var(--accent-green); }
 
+        .rec-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .rec-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rec-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .rec-priority {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
             border-radius: 6px;
-            white-space: nowrap;
+            letter-spacing: 0.5px;
         }
 
         .rec-priority.critical { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
         .rec-priority.medium { background: rgba(234, 179, 8, 0.15); color: var(--accent-yellow); }
         .rec-priority.nice { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); }
 
-        .rec-content {
-            flex: 1;
-        }
-
-        .rec-issue {
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .rec-action {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
         .rec-category {
             font-size: 12px;
             color: var(--text-muted);
             background: rgba(255, 255, 255, 0.05);
-            padding: 2px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .rec-issue {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .rec-issue strong {
+            color: var(--text-primary);
+        }
+
+        .rec-action {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            padding-left: 16px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .rec-action strong {
+            color: var(--accent-blue);
+        }
+
+        .rec-impact {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .rec-impact strong {
+            font-style: normal;
+            color: var(--text-secondary);
+        }
+
+        .rec-empty {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 24px;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .rec-empty-icon {
+            font-size: 48px;
+        }
+
+        .rec-empty-text {
+            flex: 1;
+        }
+
+        .rec-empty-text strong {
+            font-size: 18px;
+            color: var(--accent-green);
+        }
+
+        .rec-empty-text p {
+            color: var(--text-secondary);
+            margin-top: 4px;
         }
 
         /* Badge Section */
@@ -617,20 +690,37 @@ function generatePremiumCard(r) {
     }).join('');
 
     const recommendations = r.recommendations && r.recommendations.length > 0
-        ? r.recommendations.map(rec => {
+        ? r.recommendations.map((rec, index) => {
             const priorityClass = rec.priority?.includes('Critical') ? 'critical' : rec.priority?.includes('Medium') ? 'medium' : 'nice';
+            const priorityLabel = rec.priority?.includes('Critical') ? '🔴 CRITICAL' : rec.priority?.includes('Medium') ? '🟡 MEDIUM' : '🟢 NICE-TO-HAVE';
+            const priorityDesc = rec.priority?.includes('Critical')
+                ? 'Immediate action required - High impact on repository health'
+                : rec.priority?.includes('Medium')
+                    ? 'Recommended improvement - Moderate impact on score'
+                    : 'Optional enhancement - Minor impact on score';
+
             return `
                 <div class="rec-item ${priorityClass}">
-                    <span class="rec-priority ${priorityClass}">${rec.priority?.includes('Critical') ? '🔴 Critical' : rec.priority?.includes('Medium') ? '🟡 Medium' : '🟢 Nice'}</span>
+                    <div class="rec-number">${index + 1}</div>
                     <div class="rec-content">
-                        <div class="rec-issue">${rec.issue}</div>
-                        <div class="rec-action">→ ${rec.action}</div>
+                        <div class="rec-header">
+                            <span class="rec-priority ${priorityClass}">${priorityLabel}</span>
+                            <span class="rec-category">${rec.category}</span>
+                        </div>
+                        <div class="rec-issue">
+                            <strong>Issue:</strong> ${rec.issue}
+                        </div>
+                        <div class="rec-action">
+                            <strong>Action:</strong> ${rec.action}
+                        </div>
+                        <div class="rec-impact">
+                            <strong>Impact:</strong> ${priorityDesc}
+                        </div>
                     </div>
-                    <span class="rec-category">${rec.category}</span>
                 </div>
             `;
         }).join('')
-        : '<p style="color: var(--text-muted)">No recommendations - excellent work! 🎉</p>';
+        : '<div class="rec-empty"><span class="rec-empty-icon">🎉</span><div class="rec-empty-text"><strong>Excellent work!</strong><p>No recommendations - this repository follows all best practices.</p></div></div>';
 
     return `
         <div class="repo-card">
