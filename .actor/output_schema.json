@@ -1,0 +1,44 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "GitHub Repository Health Analysis Output",
+    "description": "Health scores, grades, and actionable recommendations for analyzed GitHub repositories",
+    "type": "object",
+    "properties": {
+        "dashboard": {
+            "type": "string",
+            "title": "🎨 Visual Dashboard",
+            "description": "Interactive HTML dashboard showing health scores, grades, and pillar breakdowns for all analyzed repositories",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/OUTPUT"
+        },
+        "overview": {
+            "type": "string",
+            "title": "🏆 Overview",
+            "description": "Summary table with health scores, grades, risk levels, and key metrics",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
+        },
+        "scores": {
+            "type": "string",
+            "title": "📊 Pillar Scores",
+            "description": "Detailed breakdown of all 7 health pillars: Readability, Stability, Security, Community, Maintainability, Documentation, and Automation",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=scores"
+        },
+        "tips": {
+            "type": "string",
+            "title": "💡 Recommendations",
+            "description": "Actionable improvement suggestions for each analyzed repository",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=tips"
+        },
+        "details": {
+            "type": "string",
+            "title": "📋 Security & Config",
+            "description": "Security details including license information, Dependabot status, and CI/CD configuration",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=details"
+        },
+        "allData": {
+            "type": "string",
+            "title": "📥 Full JSON Data",
+            "description": "Complete analysis data in JSON format for programmatic access",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        }
+    }
+}
