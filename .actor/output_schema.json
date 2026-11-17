@@ -1,44 +1,50 @@
 {
     "actorOutputSchemaVersion": 1,
-    "title": "GitHub Repository Health Analysis Output",
-    "description": "Health scores, grades, and actionable recommendations for analyzed GitHub repositories",
+    "title": "GitHub Repository Intelligence Platform Output",
+    "description": "Interactive HTML dashboards, 7-pillar health scores, architecture diagrams, dependencies, and SBOM records",
     "type": "object",
     "properties": {
         "dashboard": {
             "type": "string",
-            "title": "🎨 Visual Dashboard",
-            "description": "Interactive HTML dashboard showing health scores, grades, and pillar breakdowns for all analyzed repositories",
+            "title": "Interactive Visual Dashboard",
+            "description": "Standalone 21-section fintech visual dashboard with architecture diagrams, data flows, and charts",
             "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/OUTPUT"
         },
         "overview": {
             "type": "string",
-            "title": "🏆 Overview",
-            "description": "Summary table with health scores, grades, risk levels, and key metrics",
+            "title": "Overview Table",
+            "description": "Summary table with composite health scores, grades, risk ratings, stars, and recommendations",
             "template": "{{links.apiDefaultDatasetUrl}}/items?view=overview"
         },
         "scores": {
             "type": "string",
-            "title": "📊 Pillar Scores",
-            "description": "Detailed breakdown of all 7 health pillars: Readability, Stability, Security, Community, Maintainability, Documentation, and Automation",
+            "title": "7 Pillars Breakdown",
+            "description": "Pillar scores across Readability, Stability, Security, Community, Maintainability, Documentation, and Automation",
             "template": "{{links.apiDefaultDatasetUrl}}/items?view=scores"
+        },
+        "security": {
+            "type": "string",
+            "title": "Security & Governance",
+            "description": "Vulnerability policy status, Dependabot configuration, and open-source licenses",
+            "template": "{{links.apiDefaultDatasetUrl}}/items?view=security"
         },
         "tips": {
             "type": "string",
-            "title": "💡 Recommendations",
-            "description": "Actionable improvement suggestions for each analyzed repository",
+            "title": "Recommendations",
+            "description": "Prioritized action items and score improvement opportunities",
             "template": "{{links.apiDefaultDatasetUrl}}/items?view=tips"
-        },
-        "details": {
-            "type": "string",
-            "title": "📋 Security & Config",
-            "description": "Security details including license information, Dependabot status, and CI/CD configuration",
-            "template": "{{links.apiDefaultDatasetUrl}}/items?view=details"
         },
         "allData": {
             "type": "string",
-            "title": "📥 Full JSON Data",
-            "description": "Complete analysis data in JSON format for programmatic access",
+            "title": "Complete Dataset JSON",
+            "description": "Full structured dataset containing 20 advanced intelligence features",
             "template": "{{links.apiDefaultDatasetUrl}}/items"
+        },
+        "keyValueStore": {
+            "type": "string",
+            "title": "Key-Value Store Files",
+            "description": "Generated visual reports, CycloneDX SBOMs, and SPDX SBOMs in Key-Value Store",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/keys"
         }
     }
 }

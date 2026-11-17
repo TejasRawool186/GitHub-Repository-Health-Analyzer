@@ -1,0 +1,40 @@
+{
+    "actorKeyValueStoreSchemaVersion": 1,
+    "title": "Repository Intelligence Key-Value Store",
+    "description": "Visual HTML dashboards, standalone repository reports, and software bills of materials",
+    "collections": {
+        "output": {
+            "title": "Interactive Visual Dashboard",
+            "description": "Full interactive 21-section fintech intelligence dashboard containing all charts, diagrams, and metrics",
+            "key": "OUTPUT",
+            "contentTypes": [
+                "text/html"
+            ]
+        },
+        "reports": {
+            "title": "Per-Repository HTML Reports",
+            "description": "Individual standalone repository executive summary cards",
+            "keyPrefix": "report_",
+            "contentTypes": [
+                "text/html"
+            ]
+        },
+        "cyclonedx": {
+            "title": "CycloneDX SBOM Specifications",
+            "description": "CycloneDX 1.5 compliant software bills of materials in JSON format",
+            "keyPrefix": "sbom_cyclonedx_",
+            "contentTypes": [
+                "application/json"
+            ]
+        },
+        "spdx": {
+            "title": "SPDX SBOM Specifications",
+            "description": "SPDX 2.3 compliant software bills of materials in JSON format",
+            "keyPrefix": "sbom_spdx_",
+            "contentTypes": [
+                "application/json"
+            ]
+        }
+    }
+}
+
