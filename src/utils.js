@@ -164,8 +164,8 @@ export async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
         } catch (error) {
             lastError = error;
 
-            // Don't retry on 404s or auth errors
-            if (error.status === 404 || error.status === 401 || error.status === 403) {
+            // Don't retry on 404s, auth errors, or rate limits
+            if (error.status === 404 || error.status === 401 || error.status === 403 || error.status === 429) {
                 throw error;
             }
 

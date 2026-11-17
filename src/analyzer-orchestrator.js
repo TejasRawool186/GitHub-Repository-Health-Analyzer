@@ -64,18 +64,17 @@ async function runAnalysis(octokit, owner, repo, options = {}) {
 
     const defaultBranch = repoData.default_branch || 'main';
 
-    // 2. Efficient Data Collection: Fetch Git Tree, Languages, Workflows in parallel
-    const [treeResult, languagesData, workflowsData] = await Promise.all([
+    // 2. Efficient Data Collection: Fetch Git Tree and Languages in parallel
+    const [treeResult, languagesData] = await Promise.all([
         getRepoTree(octokit, owner, repo, defaultBranch),
         getRepoLanguages(octokit, owner, repo),
-        getWorkflows(octokit, owner, repo),
     ]);
 
     const treeItems = treeResult.tree || [];
     const treePaths = treeItems.map(item => item.path);
     const pathsSet = new Set(treePaths);
 
-    // 3. Fetch essential manifests based on paths found in the tree
+    // 3. Conditional manifest and file checks based on Git Tree paths
     const manifestPromises = [];
 
     // package.json & package-lock.json
@@ -140,10 +139,13 @@ async function runAnalysis(octokit, owner, repo, options = {}) {
         );
     }
 
-    // Sample workflow files (up to 3 workflows)
+    // Workflows presence
+    const workflowFilePaths = treePaths.filter(p => p.startsWith('.github/workflows/') && (p.endsWith('.yml') || p.endsWith('.yaml')));
+    const hasWorkflows = workflowFilePaths.length > 0;
+
+    // Sample workflow files (up to 2 workflows to preserve API budget)
     const sampleWorkflows = [];
-    const workflowFilePaths = treePaths.filter(p => p.startsWith('.github/workflows/') && (p.endsWith('.yml') || p.endsWith('.yaml'))).slice(0, 4);
-    for (const wfPath of workflowFilePaths) {
+    for (const wfPath of workflowFilePaths.slice(0, 2)) {
         manifestPromises.push(
             getFileContent(octokit, owner, repo, wfPath).then(res => {
                 if (res.exists && res.content) {
@@ -153,11 +155,11 @@ async function runAnalysis(octokit, owner, repo, options = {}) {
         );
     }
 
-    // Sample code files for TODO/debt inspection (up to 5 source files)
+    // Sample code files for TODO/debt inspection (up to 2 source files)
     const sampleSourceFiles = [];
     const samplePaths = treePaths.filter(p => (
         p.endsWith('.js') || p.endsWith('.ts') || p.endsWith('.py') || p.endsWith('.go') || p.endsWith('.rs')
-    ) && !p.includes('test') && !p.includes('dist') && !p.includes('vendor')).slice(0, 5);
+    ) && !p.includes('test') && !p.includes('dist') && !p.includes('vendor') && !p.includes('node_modules') && !p.includes('.min.')).slice(0, 2);
 
     for (const sp of samplePaths) {
         manifestPromises.push(
@@ -169,12 +171,12 @@ async function runAnalysis(octokit, owner, repo, options = {}) {
         );
     }
 
-    // Wait for all manifest and file fetches
-    await Promise.all(manifestPromises);
+    // README presence check
+    const hasReadmeFile = treePaths.some(p => /^readme(\.[a-z0-9]+)?$/i.test(p));
 
-    // 4. Fetch activity, contributors, releases, issues, PRs
-    const maxCommits = options.maxCommitHistory || 50;
-    const maxIssuesPrs = options.maxIssuesAndPrs || 30;
+    // 4. Fetch activity, contributors, releases, issues, PRs, workflows, and README in parallel
+    const maxCommits = options.maxCommitHistory || 30;
+    const maxIssuesPrs = options.maxIssuesAndPrs || 15;
 
     const [
         recentCommits,
@@ -185,20 +187,35 @@ async function runAnalysis(octokit, owner, repo, options = {}) {
         closedIssues,
         openPrs,
         closedPrs,
-        issueStats,
-        healthResult,
+        workflowsData,
+        readmeData,
     ] = await Promise.all([
         getRecentCommits(octokit, owner, repo, maxCommits),
-        getContributors(octokit, owner, repo, 30),
-        getReleases(octokit, owner, repo, 20),
-        getTags(octokit, owner, repo, 20),
+        getContributors(octokit, owner, repo, 25),
+        getReleases(octokit, owner, repo, 10),
+        getTags(octokit, owner, repo, 10),
         getIssues(octokit, owner, repo, 'open', maxIssuesPrs),
         getIssues(octokit, owner, repo, 'closed', maxIssuesPrs),
         getPullRequests(octokit, owner, repo, 'open', maxIssuesPrs),
         getPullRequests(octokit, owner, repo, 'closed', maxIssuesPrs),
-        getIssueStats(octokit, owner, repo),
-        calculateHealthScore(octokit, owner, repo, repoData),
+        hasWorkflows ? getWorkflows(octokit, owner, repo) : Promise.resolve({ exists: false, count: 0, workflows: [] }),
+        hasReadmeFile ? getReadme(octokit, owner, repo) : Promise.resolve({ exists: false, content: '', length: 0 }),
+        Promise.all(manifestPromises),
     ]);
+
+    // Fast zero-API issue statistics
+    const issueStats = await getIssueStats(octokit, owner, repo, repoData.open_issues_count, closedIssues.length);
+
+    // Fast zero-API 7-pillar health score calculation (cached data prevents any secondary requests)
+    const healthResult = await calculateHealthScore(octokit, owner, repo, repoData, {
+        treePaths,
+        pathsSet,
+        readme: readmeData,
+        workflows: workflowsData,
+        releases,
+        tags,
+        issueStats,
+    });
 
     // 5. Run Deterministic Analyzers
     // 6.4 & 6.13: File structure and code complexity

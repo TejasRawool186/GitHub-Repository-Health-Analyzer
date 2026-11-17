@@ -1,11 +1,12 @@
 /**
  * GitHub API Client Wrapper
- * Handles GitHub REST & Trees API with rate limit tracking, caching, and retry logic
+ * Handles GitHub REST & Trees API with rate limit tracking, caching, and retry logic.
+ * Configured with non-blocking throttle to prevent 300s timeout hangs.
  */
 
 import { Octokit } from 'octokit';
 import { log } from 'apify';
-import { retryWithBackoff, sleep } from './utils.js';
+import { retryWithBackoff } from './utils.js';
 
 // In-memory cache for API calls during a single Actor run to minimize duplicate requests
 const memoryCache = new Map();
@@ -19,6 +20,19 @@ const memoryCache = new Map();
 export function createGitHubClient(token = null, proxyUrl = null) {
     const options = {
         userAgent: 'github-health-analyzer/2.0.0',
+        request: {
+            timeout: 10000, // 10s request timeout to prevent hanging
+        },
+        throttle: {
+            onRateLimit: (retryAfter, reqOptions, octokitInstance) => {
+                log.warning(`GitHub API rate limit reached on ${reqOptions.method} ${reqOptions.url}. Immediate failover, not sleeping.`);
+                return false; // Crucial: NEVER sleep for 3600 seconds!
+            },
+            onSecondaryRateLimit: (retryAfter, reqOptions, octokitInstance) => {
+                log.warning(`GitHub API secondary rate limit on ${reqOptions.method} ${reqOptions.url}. Immediate failover, not sleeping.`);
+                return false; // Crucial: NEVER sleep for 3600 seconds!
+            },
+        },
     };
 
     if (token) {
@@ -30,7 +44,6 @@ export function createGitHubClient(token = null, proxyUrl = null) {
 
     if (proxyUrl) {
         log.info('Routing GitHub requests through configured proxy');
-        // If custom proxy agent is provided in future or custom fetch dispatcher
     }
 
     return new Octokit(options);
@@ -64,7 +77,7 @@ async function cachedCall(cacheKey, fn) {
     if (memoryCache.has(cacheKey)) {
         return memoryCache.get(cacheKey);
     }
-    const result = await retryWithBackoff(fn, 3, 1000);
+    const result = await retryWithBackoff(fn, 2, 500);
     memoryCache.set(cacheKey, result);
     return result;
 }
@@ -123,7 +136,7 @@ export async function getRepoTree(octokit, owner, repo, branch = 'main') {
             };
         });
     } catch (error) {
-        log.warning(`Git Trees API recursive fetch failed for ${owner}/${repo} (${branch}): ${error.message}`);
+        log.warning(`Git Trees API fetch failed for ${owner}/${repo} (${branch}): ${error.message}`);
         return { tree: [], truncated: false, error: error.message };
     }
 }
@@ -178,9 +191,6 @@ export async function getReadme(octokit, owner, repo) {
             };
         });
     } catch (error) {
-        if (error.status === 404) {
-            return { exists: false, content: '', length: 0 };
-        }
         return { exists: false, content: '', length: 0 };
     }
 }
@@ -213,14 +223,14 @@ export async function getRepoLanguages(octokit, owner, repo) {
  * @param {number} limit - Maximum commits to retrieve
  * @returns {Promise<Array<Object>>}
  */
-export async function getRecentCommits(octokit, owner, repo, limit = 50) {
+export async function getRecentCommits(octokit, owner, repo, limit = 30) {
     const key = `commits:${owner}/${repo}:${limit}`;
     try {
         return await cachedCall(key, async () => {
             const { data } = await octokit.rest.repos.listCommits({
                 owner,
                 repo,
-                per_page: Math.min(limit, 100),
+                per_page: Math.min(limit, 50),
             });
             return data || [];
         });
@@ -238,14 +248,14 @@ export async function getRecentCommits(octokit, owner, repo, limit = 50) {
  * @param {number} limit - Maximum contributors to retrieve
  * @returns {Promise<Array<Object>>}
  */
-export async function getContributors(octokit, owner, repo, limit = 30) {
+export async function getContributors(octokit, owner, repo, limit = 25) {
     const key = `contributors:${owner}/${repo}:${limit}`;
     try {
         return await cachedCall(key, async () => {
             const { data } = await octokit.rest.repos.listContributors({
                 owner,
                 repo,
-                per_page: Math.min(limit, 100),
+                per_page: Math.min(limit, 50),
             });
             return data || [];
         });
@@ -263,14 +273,14 @@ export async function getContributors(octokit, owner, repo, limit = 30) {
  * @param {number} limit - Maximum releases to retrieve
  * @returns {Promise<Array<Object>>}
  */
-export async function getReleases(octokit, owner, repo, limit = 20) {
+export async function getReleases(octokit, owner, repo, limit = 10) {
     const key = `releases:${owner}/${repo}:${limit}`;
     try {
         return await cachedCall(key, async () => {
             const { data } = await octokit.rest.repos.listReleases({
                 owner,
                 repo,
-                per_page: Math.min(limit, 100),
+                per_page: Math.min(limit, 30),
             });
             return data || [];
         });
@@ -287,14 +297,14 @@ export async function getReleases(octokit, owner, repo, limit = 20) {
  * @param {number} limit - Maximum tags to retrieve
  * @returns {Promise<Array<Object>>}
  */
-export async function getTags(octokit, owner, repo, limit = 20) {
+export async function getTags(octokit, owner, repo, limit = 10) {
     const key = `tags:${owner}/${repo}:${limit}`;
     try {
         return await cachedCall(key, async () => {
             const { data } = await octokit.rest.repos.listTags({
                 owner,
                 repo,
-                per_page: Math.min(limit, 100),
+                per_page: Math.min(limit, 30),
             });
             return data || [];
         });
@@ -312,7 +322,7 @@ export async function getTags(octokit, owner, repo, limit = 20) {
  * @param {number} limit - Maximum issues to retrieve
  * @returns {Promise<Array<Object>>}
  */
-export async function getIssues(octokit, owner, repo, state = 'open', limit = 30) {
+export async function getIssues(octokit, owner, repo, state = 'open', limit = 15) {
     const key = `issues:${owner}/${repo}:${state}:${limit}`;
     try {
         return await cachedCall(key, async () => {
@@ -320,7 +330,7 @@ export async function getIssues(octokit, owner, repo, state = 'open', limit = 30
                 owner,
                 repo,
                 state,
-                per_page: Math.min(limit, 100),
+                per_page: Math.min(limit, 30),
                 sort: 'updated',
                 direction: 'desc',
             });
@@ -340,7 +350,7 @@ export async function getIssues(octokit, owner, repo, state = 'open', limit = 30
  * @param {number} limit - Maximum PRs to retrieve
  * @returns {Promise<Array<Object>>}
  */
-export async function getPullRequests(octokit, owner, repo, state = 'all', limit = 30) {
+export async function getPullRequests(octokit, owner, repo, state = 'all', limit = 15) {
     const key = `pulls:${owner}/${repo}:${state}:${limit}`;
     try {
         return await cachedCall(key, async () => {
@@ -348,7 +358,7 @@ export async function getPullRequests(octokit, owner, repo, state = 'all', limit
                 owner,
                 repo,
                 state,
-                per_page: Math.min(limit, 100),
+                per_page: Math.min(limit, 30),
                 sort: 'updated',
                 direction: 'desc',
             });
@@ -387,136 +397,28 @@ export async function getWorkflows(octokit, owner, repo) {
  * @param {Octokit} octokit - GitHub client instance
  * @param {string} owner - Repository owner
  * @param {string} repo - Repository name
+ * @param {number|null} knownOpen - Open issues count if already known from repoData
+ * @param {number|null} closedCount - Closed issues count if already sampled
  * @returns {Promise<{open: number, closed: number, ratio: number}>}
  */
-export async function getIssueStats(octokit, owner, repo) {
+export async function getIssueStats(octokit, owner, repo, knownOpen = null, closedCount = null) {
     try {
-        const [openResponse, closedResponse] = await Promise.all([
-            octokit.rest.issues.listForRepo({ owner, repo, state: 'open', per_page: 1 }),
-            octokit.rest.issues.listForRepo({ owner, repo, state: 'closed', per_page: 1 }),
-        ]);
+        const open = typeof knownOpen === 'number' ? knownOpen : 0;
+        let closed = typeof closedCount === 'number' ? closedCount : 0;
 
-        const openCount = parseInt(openResponse.headers['x-total-count'] || openResponse.data.length, 10);
-        const closedCount = parseInt(closedResponse.headers['x-total-count'] || closedResponse.data.length, 10);
-        const total = openCount + closedCount;
-        const ratio = total > 0 ? (closedCount / total) * 100 : 0;
-
-        return {
-            open: isNaN(openCount) ? 0 : openCount,
-            closed: isNaN(closedCount) ? 0 : closedCount,
-            ratio: Math.round(ratio),
-        };
-    } catch (error) {
-        return { open: 0, closed: 0, ratio: 0 };
-    }
-}
-
-/**
- * Check if a specific file exists
- * @param {Octokit} octokit - GitHub client instance
- * @param {string} owner - Repository owner
- * @param {string} repo - Repository name
- * @param {string} path - File path
- * @returns {Promise<boolean>}
- */
-export async function fileExists(octokit, owner, repo, path) {
-    try {
-        await octokit.rest.repos.getContent({ owner, repo, path });
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
-
-/**
- * Check if a directory exists
- * @param {Octokit} octokit - GitHub client instance
- * @param {string} owner - Repository owner
- * @param {string} repo - Repository name
- * @param {string} path - Directory path
- * @returns {Promise<boolean>}
- */
-export async function directoryExists(octokit, owner, repo, path) {
-    try {
-        const { data } = await octokit.rest.repos.getContent({ owner, repo, path });
-        return Array.isArray(data);
-    } catch (error) {
-        return false;
-    }
-}
-
-/**
- * Check for common security files
- * @param {Octokit} octokit - GitHub client instance
- * @param {string} owner - Repository owner
- * @param {string} repo - Repository name
- * @returns {Promise<{securityMd: boolean, dependabot: boolean}>}
- */
-export async function getSecurityFiles(octokit, owner, repo) {
-    const [securityMd, dependabot, dependabotYml] = await Promise.all([
-        fileExists(octokit, owner, repo, 'SECURITY.md'),
-        fileExists(octokit, owner, repo, '.github/dependabot.yml'),
-        fileExists(octokit, owner, repo, '.github/dependabot.yaml'),
-    ]);
-
-    return {
-        securityMd,
-        dependabot: dependabot || dependabotYml,
-    };
-}
-
-/**
- * Check for common linter configurations
- * @param {Octokit} octokit - GitHub client instance
- * @param {string} owner - Repository owner
- * @param {string} repo - Repository name
- * @returns {Promise<boolean>}
- */
-export async function hasLinterConfig(octokit, owner, repo) {
-    const linterFiles = [
-        '.eslintrc',
-        '.eslintrc.js',
-        '.eslintrc.json',
-        '.eslintrc.yml',
-        '.eslintrc.yaml',
-        'eslint.config.js',
-        'eslint.config.mjs',
-        '.prettierrc',
-        '.prettierrc.js',
-        '.prettierrc.json',
-        'biome.json',
-        '.stylelintrc',
-        'tslint.json',
-        '.flake8',
-        'pyproject.toml',
-        'ruff.toml',
-        '.golangci.yml',
-        '.rustfmt.toml',
-    ];
-
-    for (const file of linterFiles) {
-        if (await fileExists(octokit, owner, repo, file)) {
-            return true;
+        if (closedCount === null) {
+            const closedResponse = await octokit.rest.issues.listForRepo({ owner, repo, state: 'closed', per_page: 1 });
+            closed = parseInt(closedResponse.headers['x-total-count'] || closedResponse.data.length, 10);
+            if (isNaN(closed)) closed = 0;
         }
-    }
-    return false;
-}
 
-/**
- * Check for test directory
- * @param {Octokit} octokit - GitHub client instance
- * @param {string} owner - Repository owner
- * @param {string} repo - Repository name
- * @returns {Promise<boolean>}
- */
-export async function hasTestDirectory(octokit, owner, repo) {
-    const testDirs = ['test', 'tests', '__tests__', 'spec', 'specs'];
-    for (const dir of testDirs) {
-        if (await directoryExists(octokit, owner, repo, dir)) {
-            return true;
-        }
+        const total = open + closed;
+        const ratio = total > 0 ? Math.round((closed / total) * 100) : 0;
+
+        return { open, closed, ratio };
+    } catch (error) {
+        return { open: knownOpen || 0, closed: 0, ratio: 0 };
     }
-    return false;
 }
 
 /**
@@ -541,7 +443,6 @@ export async function getUserRepos(octokit, username, maxRepos = 10) {
             });
             repos = data;
         } catch (userErr) {
-            // Might be an organization
             const { data } = await octokit.rest.repos.listForOrg({
                 org: username,
                 type: 'public',
