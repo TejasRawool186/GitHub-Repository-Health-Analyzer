@@ -1,9 +1,10 @@
 /**
  * Repository Health Scoring Engine
  * Implements the 7-Pillar weighted scoring algorithm + Recommendations
+ * (Readability, Stability, Security, Community, Maintainability, Documentation, Automation)
  */
 
-import { log } from 'crawlee';
+import { log } from 'apify';
 import {
     getReadme,
     getWorkflows,
@@ -55,18 +56,18 @@ const LICENSE_SCORES = {
  */
 function getLicenseRisk(licenseKey) {
     if (!licenseKey) {
-        return { score: 20, risk: '🔴 High (No License)' };
+        return { score: 20, risk: 'High (No License)' };
     }
 
     const key = licenseKey.toLowerCase();
     const score = LICENSE_SCORES[key] ?? 50;
 
     if (score >= 85) {
-        return { score, risk: '🟢 Low (Permissive)' };
+        return { score, risk: 'Low (Permissive)' };
     } else if (score >= 60) {
-        return { score, risk: '🟡 Medium (Copyleft)' };
+        return { score, risk: 'Medium (Copyleft)' };
     } else {
-        return { score, risk: '🔴 High (Restrictive)' };
+        return { score, risk: 'High (Restrictive)' };
     }
 }
 
@@ -94,7 +95,7 @@ async function calculateReadabilityScore(octokit, owner, repo, repoData) {
         if (details.hasUsage) score += 15;
     }
 
-    details.hasDescription = !!repoData.description && repoData.description.length > 10;
+    details.hasDescription = Boolean(repoData.description && repoData.description.length > 10);
     if (details.hasDescription) score += 30;
 
     return { score: Math.min(score, 100), details };
@@ -112,15 +113,15 @@ async function calculateStabilityScore(octokit, owner, repo, repoData) {
         getTags(octokit, owner, repo),
     ]);
 
-    details.hasReleases = releases.exists;
-    details.releaseCount = releases.count;
-    details.hasTags = tags.exists;
-    details.tagCount = tags.count;
-    details.latestRelease = releases.latest;
+    details.hasReleases = releases.length > 0;
+    details.releaseCount = releases.length;
+    details.hasTags = tags.length > 0;
+    details.tagCount = tags.length;
+    details.latestRelease = releases.length > 0 ? releases[0].tag_name : null;
 
-    if (releases.exists || tags.exists) {
+    if (details.hasReleases || details.hasTags) {
         score += 25;
-        if (releases.count > 5 || tags.count > 5) score += 15;
+        if (details.releaseCount > 5 || details.tagCount > 5) score += 15;
     }
 
     const workflows = await getWorkflows(octokit, owner, repo);
@@ -236,7 +237,7 @@ async function calculateMaintainabilityScore(octokit, owner, repo) {
 }
 
 /**
- * Calculate Documentation Score (15% weight) - NEW!
+ * Calculate Documentation Score (15% weight)
  * - Has /docs folder or wiki
  * - Has CHANGELOG.md
  * - Has /examples folder
@@ -246,36 +247,37 @@ async function calculateDocumentationScore(octokit, owner, repo, repoData) {
     let score = 0;
     const details = {};
 
-    // Check for docs folder (25 points)
     details.hasDocsFolder = await directoryExists(octokit, owner, repo, 'docs');
     if (details.hasDocsFolder) score += 25;
 
-    // Check for CHANGELOG.md (25 points)
-    details.hasChangelog = await fileExists(octokit, owner, repo, 'CHANGELOG.md') ||
-        await fileExists(octokit, owner, repo, 'HISTORY.md') ||
-        await fileExists(octokit, owner, repo, 'CHANGES.md');
+    details.hasChangelog = (
+        (await fileExists(octokit, owner, repo, 'CHANGELOG.md')) ||
+        (await fileExists(octokit, owner, repo, 'HISTORY.md')) ||
+        (await fileExists(octokit, owner, repo, 'CHANGES.md'))
+    );
     if (details.hasChangelog) score += 25;
 
-    // Check for examples folder (25 points)
-    details.hasExamples = await directoryExists(octokit, owner, repo, 'examples') ||
-        await directoryExists(octokit, owner, repo, 'example');
+    details.hasExamples = (
+        (await directoryExists(octokit, owner, repo, 'examples')) ||
+        (await directoryExists(octokit, owner, repo, 'example'))
+    );
     if (details.hasExamples) score += 25;
 
-    // Check for wiki or has_wiki flag (15 points)
-    details.hasWiki = repoData.has_wiki;
+    details.hasWiki = Boolean(repoData.has_wiki);
     if (repoData.has_wiki) score += 15;
 
-    // Check for API docs (various formats) (10 points)
-    details.hasApiDocs = await fileExists(octokit, owner, repo, 'API.md') ||
-        await fileExists(octokit, owner, repo, 'docs/api.md') ||
-        await directoryExists(octokit, owner, repo, 'docs/api');
+    details.hasApiDocs = (
+        (await fileExists(octokit, owner, repo, 'API.md')) ||
+        (await fileExists(octokit, owner, repo, 'docs/api.md')) ||
+        (await directoryExists(octokit, owner, repo, 'docs/api'))
+    );
     if (details.hasApiDocs) score += 10;
 
     return { score: Math.min(score, 100), details };
 }
 
 /**
- * Calculate Automation Score (15% weight) - NEW!
+ * Calculate Automation Score (15% weight)
  * - Has multiple CI workflows
  * - Has PR templates
  * - Has issue templates
@@ -285,7 +287,6 @@ async function calculateAutomationScore(octokit, owner, repo) {
     let score = 0;
     const details = {};
 
-    // Check for CI workflows (30 points)
     const workflows = await getWorkflows(octokit, owner, repo);
     details.workflowCount = workflows.count;
     if (workflows.count >= 3) {
@@ -294,24 +295,26 @@ async function calculateAutomationScore(octokit, owner, repo) {
         score += 20;
     }
 
-    // Check for PR template (20 points)
-    details.hasPRTemplate = await fileExists(octokit, owner, repo, '.github/PULL_REQUEST_TEMPLATE.md') ||
-        await fileExists(octokit, owner, repo, '.github/pull_request_template.md') ||
-        await directoryExists(octokit, owner, repo, '.github/PULL_REQUEST_TEMPLATE');
+    details.hasPRTemplate = (
+        (await fileExists(octokit, owner, repo, '.github/PULL_REQUEST_TEMPLATE.md')) ||
+        (await fileExists(octokit, owner, repo, '.github/pull_request_template.md')) ||
+        (await directoryExists(octokit, owner, repo, '.github/PULL_REQUEST_TEMPLATE'))
+    );
     if (details.hasPRTemplate) score += 20;
 
-    // Check for issue templates (20 points)
-    details.hasIssueTemplate = await fileExists(octokit, owner, repo, '.github/ISSUE_TEMPLATE.md') ||
-        await directoryExists(octokit, owner, repo, '.github/ISSUE_TEMPLATE');
+    details.hasIssueTemplate = (
+        (await fileExists(octokit, owner, repo, '.github/ISSUE_TEMPLATE.md')) ||
+        (await directoryExists(octokit, owner, repo, '.github/ISSUE_TEMPLATE'))
+    );
     if (details.hasIssueTemplate) score += 20;
 
-    // Check for release automation (15 points)
-    details.hasReleaseConfig = await fileExists(octokit, owner, repo, '.releaserc') ||
-        await fileExists(octokit, owner, repo, '.releaserc.json') ||
-        await fileExists(octokit, owner, repo, 'release.config.js');
+    details.hasReleaseConfig = (
+        (await fileExists(octokit, owner, repo, '.releaserc')) ||
+        (await fileExists(octokit, owner, repo, '.releaserc.json')) ||
+        (await fileExists(octokit, owner, repo, 'release.config.js'))
+    );
     if (details.hasReleaseConfig) score += 15;
 
-    // Check for CODE_OF_CONDUCT.md (15 points)
     details.hasCodeOfConduct = await fileExists(octokit, owner, repo, 'CODE_OF_CONDUCT.md');
     if (details.hasCodeOfConduct) score += 15;
 
@@ -327,7 +330,7 @@ function generateRecommendations(pillars) {
     // Readability recommendations
     if (!pillars.readability.details.hasReadme) {
         recommendations.push({
-            priority: '🔴 Critical',
+            priority: 'Critical',
             category: 'Readability',
             issue: 'Missing README.md',
             action: 'Create a README.md file with project description, installation, and usage instructions.',
@@ -336,7 +339,7 @@ function generateRecommendations(pillars) {
     } else {
         if (!pillars.readability.details.hasInstallation) {
             recommendations.push({
-                priority: '🟡 Medium',
+                priority: 'Medium',
                 category: 'Readability',
                 issue: 'Missing installation instructions',
                 action: 'Add an "Installation" section to your README with setup steps.',
@@ -345,7 +348,7 @@ function generateRecommendations(pillars) {
         }
         if (!pillars.readability.details.hasUsage) {
             recommendations.push({
-                priority: '🟡 Medium',
+                priority: 'Medium',
                 category: 'Readability',
                 issue: 'Missing usage documentation',
                 action: 'Add a "Usage" or "Getting Started" section with examples.',
@@ -356,7 +359,7 @@ function generateRecommendations(pillars) {
 
     if (!pillars.readability.details.hasDescription) {
         recommendations.push({
-            priority: '🟡 Medium',
+            priority: 'Medium',
             category: 'Readability',
             issue: 'Missing repository description',
             action: 'Add a description in the repository settings (About section).',
@@ -367,7 +370,7 @@ function generateRecommendations(pillars) {
     // Security recommendations
     if (!pillars.security.details.hasSecurityMd) {
         recommendations.push({
-            priority: '🔴 Critical',
+            priority: 'Critical',
             category: 'Security',
             issue: 'Missing SECURITY.md',
             action: 'Create SECURITY.md with vulnerability reporting guidelines.',
@@ -377,7 +380,7 @@ function generateRecommendations(pillars) {
 
     if (!pillars.security.details.hasDependabot) {
         recommendations.push({
-            priority: '🟡 Medium',
+            priority: 'Medium',
             category: 'Security',
             issue: 'Dependabot not configured',
             action: 'Enable Dependabot by adding .github/dependabot.yml for automatic security updates.',
@@ -387,7 +390,7 @@ function generateRecommendations(pillars) {
 
     if (pillars.security.details.licenseRisk?.includes('High')) {
         recommendations.push({
-            priority: '🔴 Critical',
+            priority: 'Critical',
             category: 'Security',
             issue: 'No license or restrictive license',
             action: 'Add an open-source license (MIT, Apache-2.0 recommended).',
@@ -398,7 +401,7 @@ function generateRecommendations(pillars) {
     // Maintainability recommendations
     if (!pillars.maintainability.details.hasTests) {
         recommendations.push({
-            priority: '🔴 Critical',
+            priority: 'Critical',
             category: 'Maintainability',
             issue: 'No tests detected',
             action: 'Add a test/ or __tests__/ directory with unit tests.',
@@ -408,7 +411,7 @@ function generateRecommendations(pillars) {
 
     if (!pillars.maintainability.details.hasLinter) {
         recommendations.push({
-            priority: '🟡 Medium',
+            priority: 'Medium',
             category: 'Maintainability',
             issue: 'No linter configuration',
             action: 'Add .eslintrc, .prettierrc, or biome.json for code quality.',
@@ -419,7 +422,7 @@ function generateRecommendations(pillars) {
     // Documentation recommendations
     if (!pillars.documentation.details.hasDocsFolder) {
         recommendations.push({
-            priority: '🟡 Medium',
+            priority: 'Medium',
             category: 'Documentation',
             issue: 'No docs/ folder',
             action: 'Create a docs/ directory with detailed documentation.',
@@ -429,7 +432,7 @@ function generateRecommendations(pillars) {
 
     if (!pillars.documentation.details.hasChangelog) {
         recommendations.push({
-            priority: '🟡 Medium',
+            priority: 'Medium',
             category: 'Documentation',
             issue: 'No CHANGELOG.md',
             action: 'Add CHANGELOG.md to track version history and changes.',
@@ -439,7 +442,7 @@ function generateRecommendations(pillars) {
 
     if (!pillars.documentation.details.hasExamples) {
         recommendations.push({
-            priority: '🟢 Nice-to-have',
+            priority: 'Low',
             category: 'Documentation',
             issue: 'No examples/ folder',
             action: 'Add an examples/ directory with usage examples.',
@@ -450,7 +453,7 @@ function generateRecommendations(pillars) {
     // Automation recommendations
     if (!pillars.automation.details.hasPRTemplate) {
         recommendations.push({
-            priority: '🟢 Nice-to-have',
+            priority: 'Low',
             category: 'Automation',
             issue: 'No PR template',
             action: 'Create .github/PULL_REQUEST_TEMPLATE.md for consistent PRs.',
@@ -460,7 +463,7 @@ function generateRecommendations(pillars) {
 
     if (!pillars.automation.details.hasIssueTemplate) {
         recommendations.push({
-            priority: '🟢 Nice-to-have',
+            priority: 'Low',
             category: 'Automation',
             issue: 'No issue templates',
             action: 'Add .github/ISSUE_TEMPLATE/ with bug and feature templates.',
@@ -470,7 +473,7 @@ function generateRecommendations(pillars) {
 
     if (!pillars.automation.details.hasCodeOfConduct) {
         recommendations.push({
-            priority: '🟢 Nice-to-have',
+            priority: 'Low',
             category: 'Automation',
             issue: 'No Code of Conduct',
             action: 'Add CODE_OF_CONDUCT.md for community guidelines.',
@@ -481,7 +484,7 @@ function generateRecommendations(pillars) {
     // Community recommendations
     if (!pillars.community.details.hasContributing) {
         recommendations.push({
-            priority: '🟡 Medium',
+            priority: 'Medium',
             category: 'Community',
             issue: 'No CONTRIBUTING.md',
             action: 'Create CONTRIBUTING.md with contribution guidelines.',
@@ -492,7 +495,7 @@ function generateRecommendations(pillars) {
     // Stability recommendations
     if (!pillars.stability.details.hasReleases && !pillars.stability.details.hasTags) {
         recommendations.push({
-            priority: '🟡 Medium',
+            priority: 'Medium',
             category: 'Stability',
             issue: 'No releases or tags',
             action: 'Create GitHub releases with semantic versioning.',
@@ -500,9 +503,9 @@ function generateRecommendations(pillars) {
         });
     }
 
-    // Sort by priority
-    const priorityOrder = { '🔴 Critical': 0, '🟡 Medium': 1, '🟢 Nice-to-have': 2 };
-    recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    // Sort by priority: Critical, Medium, Low
+    const priorityOrder = { 'Critical': 0, 'Medium': 1, 'Low': 2 };
+    recommendations.sort((a, b) => (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3));
 
     return recommendations;
 }
@@ -511,9 +514,9 @@ function generateRecommendations(pillars) {
  * Calculate overall health score using weighted average (7 pillars)
  */
 export async function calculateHealthScore(octokit, owner, repo, repoData) {
-    log.info(`Calculating health score for ${owner}/${repo}...`);
+    log.info(`Calculating 7-pillar health score for ${owner}/${repo}...`);
 
-    // Calculate all 7 pillar scores
+    // Calculate all 7 pillar scores concurrently
     const [readability, stability, security, community, maintainability, documentation, automation] = await Promise.all([
         calculateReadabilityScore(octokit, owner, repo, repoData),
         calculateStabilityScore(octokit, owner, repo, repoData),
@@ -524,7 +527,7 @@ export async function calculateHealthScore(octokit, owner, repo, repoData) {
         calculateAutomationScore(octokit, owner, repo),
     ]);
 
-    // New weighted average (7 pillars)
+    // 7 pillar weights sum to 1.0 (100%)
     const weights = {
         readability: 0.15,
         stability: 0.15,
@@ -554,11 +557,11 @@ export async function calculateHealthScore(octokit, owner, repo, repoData) {
     else if (totalScore >= 50) grade = 'D';
     else grade = 'F';
 
-    // Determine risk level
+    // Determine risk level (clean text, no emojis)
     let riskLevel;
-    if (totalScore >= 80) riskLevel = '🟢 Low Risk';
-    else if (totalScore >= 50) riskLevel = '🟡 Medium Risk';
-    else riskLevel = '🔴 High Risk';
+    if (totalScore >= 80) riskLevel = 'Low Risk';
+    else if (totalScore >= 50) riskLevel = 'Medium Risk';
+    else riskLevel = 'High Risk';
 
     const pillars = {
         readability: { score: readability.score, weight: '15%', details: readability.details },
@@ -573,7 +576,7 @@ export async function calculateHealthScore(octokit, owner, repo, repoData) {
     // Generate recommendations
     const recommendations = generateRecommendations(pillars);
 
-    log.info(`${owner}/${repo}: Score=${totalScore}, Grade=${grade}, Recommendations=${recommendations.length}`);
+    log.info(`${owner}/${repo}: Health Score = ${totalScore}/100, Grade = ${grade}, Recommendations = ${recommendations.length}`);
 
     return {
         totalScore,
