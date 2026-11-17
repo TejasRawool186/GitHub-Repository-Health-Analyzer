@@ -1,13 +1,16 @@
 {
-    "title": "GitHub Health Scanner Input",
+    "title": "GitHub Repository Health Analyzer Input",
+    "description": "Configure GitHub repository URLs, authentication token, scanning depth, and proxy settings.",
     "type": "object",
     "schemaVersion": 1,
     "properties": {
         "startUrls": {
             "title": "Repositories or Users to Scan",
             "type": "array",
-            "description": "Enter GitHub Repo URLs (to scan one) or User Profile URLs (to scan all their public repos). Examples: https://github.com/facebook/react or https://github.com/apify",
+            "description": "Enter GitHub Repository URLs (e.g. https://github.com/facebook/react) or User/Organization Profile URLs (e.g. https://github.com/apify) to scan public repositories.",
             "editor": "requestListSources",
+            "sectionCaption": "Target Repositories",
+            "sectionDescription": "Specify direct repository URLs or GitHub user/organization profiles to scan.",
             "prefill": [
                 {
                     "url": "https://github.com/apify/crawlee"
@@ -15,27 +18,58 @@
             ]
         },
         "maxReposPerUser": {
-            "title": "Max Repos (Profile Scan)",
+            "title": "Max Repositories per Profile",
             "type": "integer",
-            "description": "Limit how many repos to scan when a User Profile URL is provided. Set to 0 for unlimited.",
+            "description": "Maximum number of public repositories to audit when scanning a user or organization profile URL. Set to 0 for unlimited.",
             "default": 10,
             "minimum": 0,
             "maximum": 100
         },
         "githubToken": {
-            "title": "GitHub Token (Optional)",
+            "title": "GitHub Personal Access Token (PAT)",
             "type": "string",
-            "description": "Provide a Personal Access Token (PAT) to increase API rate limits from 60 to 5000 requests/hour. Required for private repositories.",
+            "description": "Optional GitHub Personal Access Token (classic or fine-grained). Increases rate limits from 60 to 5,000 requests/hour and unlocks private repository scanning.",
             "editor": "textfield",
-            "isSecret": true
+            "isSecret": true,
+            "sectionCaption": "Authentication & Rate Limits",
+            "sectionDescription": "Supply a personal access token for enterprise repos and elevated API rate limits."
         },
         "minHealthScore": {
-            "title": "Minimum Score Filter",
+            "title": "Minimum Health Score Filter",
             "type": "integer",
-            "description": "Only output results scoring above this threshold (0-100). Set to 0 to include all results.",
+            "description": "Filter results to only output repositories scoring at or above this threshold (0-100). Set to 0 to keep all results.",
             "default": 0,
             "minimum": 0,
+            "maximum": 100,
+            "sectionCaption": "Scan Depth & Filtering",
+            "sectionDescription": "Fine-tune audit depth and output filtering thresholds."
+        },
+        "maxCommitHistory": {
+            "title": "Max Commits to Analyze",
+            "type": "integer",
+            "description": "Maximum recent commit records to fetch and analyze for activity heatmaps, commit velocity, and author timelines.",
+            "default": 50,
+            "minimum": 10,
             "maximum": 100
+        },
+        "maxIssuesAndPrs": {
+            "title": "Max Issues & PRs Sample Size",
+            "type": "integer",
+            "description": "Number of open and closed issues and pull requests to sample for aging distribution and merge velocity calculation.",
+            "default": 30,
+            "minimum": 10,
+            "maximum": 100
+        },
+        "proxyConfiguration": {
+            "title": "Proxy Configuration",
+            "type": "object",
+            "description": "Select Apify Proxy or custom proxies to route GitHub API requests reliably across restricted networks.",
+            "editor": "proxy",
+            "default": {
+                "useApifyProxy": false
+            },
+            "sectionCaption": "Proxy Configuration",
+            "sectionDescription": "Route requests through Apify Proxy when running large-scale crawls across networks."
         }
     },
     "required": [
