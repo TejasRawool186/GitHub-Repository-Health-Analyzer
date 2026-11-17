@@ -1,12 +1,12 @@
 {
     "name": "github-health-analyzer",
-    "version": "1.0.0",
-    "description": "GitHub Repository Health Analyzer - Audit repos and get a Health Score (0-100)",
+    "version": "2.0.0",
+    "description": "Enterprise GitHub Repository Intelligence Platform - Health score (0-100), 20 intelligence features, tech stacks, architecture diagrams, dependencies, and CycloneDX/SPDX SBOM.",
     "type": "module",
     "main": "src/main.js",
     "scripts": {
         "start": "node src/main.js",
-        "test": "node --test"
+        "test": "node test_suite.js"
     },
     "author": "Tejas Rawool",
     "license": "MIT",

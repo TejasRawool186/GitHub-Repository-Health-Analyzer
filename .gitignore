@@ -37,3 +37,7 @@ coverage/
 # Misc
 *.bak
 *.tmp
+
+# Cache
+.cache/
+.apify_temp/
