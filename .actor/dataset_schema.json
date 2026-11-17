@@ -1,0 +1,371 @@
+{
+    "actorSpecification": 1,
+    "fields": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+            "repo_name": {
+                "type": "string",
+                "description": "Full name of the repository (owner/name)",
+                "nullable": true,
+                "example": "example-owner/example-repo"
+            },
+            "repo_url": {
+                "type": "string",
+                "description": "Public URL of the GitHub repository",
+                "nullable": true,
+                "example": "https://github.com/example-owner/example-repo"
+            },
+            "health_score": {
+                "type": "number",
+                "description": "Overall composite health score from 0 to 100",
+                "nullable": true,
+                "example": 85
+            },
+            "health_grade": {
+                "type": "string",
+                "description": "Letter grade rating from A+ to F",
+                "nullable": true,
+                "example": "A"
+            },
+            "risk_level": {
+                "type": "string",
+                "description": "Categorical risk assessment: Low Risk, Medium Risk, or High Risk",
+                "nullable": true,
+                "example": "Low Risk"
+            },
+            "stars": {
+                "type": "number",
+                "description": "Total GitHub stargazers count",
+                "nullable": true,
+                "example": 1250
+            },
+            "forks": {
+                "type": "number",
+                "description": "Total forks count",
+                "nullable": true,
+                "example": 180
+            },
+            "open_issues": {
+                "type": "number",
+                "description": "Total open issues count",
+                "nullable": true,
+                "example": 15
+            },
+            "closed_issues": {
+                "type": "number",
+                "description": "Total closed issues count",
+                "nullable": true,
+                "example": 85
+            },
+            "issue_close_ratio": {
+                "type": "string",
+                "description": "Percentage ratio of closed issues to total issues",
+                "nullable": true,
+                "example": "85%"
+            },
+            "license_type": {
+                "type": "string",
+                "description": "Detected repository open-source license name",
+                "nullable": true,
+                "example": "MIT License"
+            },
+            "license_risk": {
+                "type": "string",
+                "description": "License legal risk rating",
+                "nullable": true,
+                "example": "Low (Permissive)"
+            },
+            "has_security_md": {
+                "type": "string",
+                "description": "Indicates whether a SECURITY.md vulnerability policy exists",
+                "nullable": true,
+                "example": "Yes"
+            },
+            "dependabot_enabled": {
+                "type": "string",
+                "description": "Indicates whether Dependabot security configuration exists",
+                "nullable": true,
+                "example": "Yes"
+            },
+            "has_contributing_md": {
+                "type": "string",
+                "description": "Indicates whether CONTRIBUTING.md guidelines exist",
+                "nullable": true,
+                "example": "Yes"
+            },
+            "workflow_count": {
+                "type": "number",
+                "description": "Number of GitHub Actions CI/CD workflows detected",
+                "nullable": true,
+                "example": 3
+            },
+            "readability_score": {
+                "type": "number",
+                "description": "Readability pillar score (0-100)",
+                "nullable": true,
+                "example": 90
+            },
+            "stability_score": {
+                "type": "number",
+                "description": "Stability pillar score (0-100)",
+                "nullable": true,
+                "example": 85
+            },
+            "security_score": {
+                "type": "number",
+                "description": "Security pillar score (0-100)",
+                "nullable": true,
+                "example": 80
+            },
+            "community_score": {
+                "type": "number",
+                "description": "Community engagement pillar score (0-100)",
+                "nullable": true,
+                "example": 75
+            },
+            "maintainability_score": {
+                "type": "number",
+                "description": "Maintainability pillar score (0-100)",
+                "nullable": true,
+                "example": 85
+            },
+            "documentation_score": {
+                "type": "number",
+                "description": "Documentation pillar score (0-100)",
+                "nullable": true,
+                "example": 80
+            },
+            "automation_score": {
+                "type": "number",
+                "description": "Automation pillar score (0-100)",
+                "nullable": true,
+                "example": 90
+            },
+            "recommendation_count": {
+                "type": "number",
+                "description": "Total count of actionable recommendations generated",
+                "nullable": true,
+                "example": 4
+            },
+            "top_recommendations": {
+                "type": "string",
+                "description": "Summary string of top prioritized improvement actions",
+                "nullable": true,
+                "example": "[Medium] Missing CHANGELOG.md | [Low] No PR template"
+            },
+            "badge_url": {
+                "type": "string",
+                "description": "Shields.io vector badge URL representing the health grade",
+                "nullable": true,
+                "example": "https://img.shields.io/badge/Health-A%20(85%25)-brightgreen?style=for-the-badge"
+            },
+            "badge_markdown": {
+                "type": "string",
+                "description": "Markdown code snippet for embedding in README.md",
+                "nullable": true,
+                "example": "[![Health: A](https://img.shields.io/badge/Health-A-brightgreen)](https://github.com/example-owner/example-repo)"
+            },
+            "last_commit": {
+                "type": "string",
+                "description": "Date of the last push to default branch",
+                "nullable": true,
+                "example": "2025-11-15"
+            },
+            "language": {
+                "type": "string",
+                "description": "Primary repository programming language",
+                "nullable": true,
+                "example": "TypeScript"
+            },
+            "description": {
+                "type": "string",
+                "description": "Repository description from GitHub settings",
+                "nullable": true,
+                "example": "Production-grade repository"
+            },
+            "dashboard_info": {
+                "type": "string",
+                "description": "Access guidance for interactive visual dashboard",
+                "nullable": true,
+                "example": "Go to Storage -> Key-Value Store -> OUTPUT to preview the interactive dashboard."
+            },
+            "technology_stack": {
+                "type": "object",
+                "description": "Detected technologies across 10 categories",
+                "properties": {
+                    "total_technologies": { "type": "number", "nullable": true },
+                    "declared_count": { "type": "number", "nullable": true },
+                    "inferred_count": { "type": "number", "nullable": true }
+                },
+                "required": [],
+                "additionalProperties": true,
+                "nullable": true,
+                "example": { "total_technologies": 12, "declared_count": 9, "inferred_count": 3 }
+            },
+            "architecture": {
+                "type": "object",
+                "description": "System architecture component graph and evidence",
+                "properties": {
+                    "total_components": { "type": "number", "nullable": true },
+                    "total_connections": { "type": "number", "nullable": true }
+                },
+                "required": [],
+                "additionalProperties": true,
+                "nullable": true,
+                "example": { "total_components": 6, "total_connections": 5 }
+            },
+            "dependencies": {
+                "type": "object",
+                "description": "Package dependency ecosystem and lockfile analysis",
+                "properties": {
+                    "total_dependencies": { "type": "number", "nullable": true },
+                    "direct_dependencies_count": { "type": "number", "nullable": true },
+                    "unpinned_dependencies_count": { "type": "number", "nullable": true }
+                },
+                "required": [],
+                "additionalProperties": true,
+                "nullable": true,
+                "example": { "total_dependencies": 45, "direct_dependencies_count": 18, "unpinned_dependencies_count": 2 }
+            },
+            "security": {
+                "type": "object",
+                "description": "Security observatory checklist and score",
+                "properties": {
+                    "security_readiness_score": { "type": "number", "nullable": true },
+                    "has_security_md": { "type": "boolean", "nullable": true },
+                    "has_dependabot": { "type": "boolean", "nullable": true }
+                },
+                "required": [],
+                "additionalProperties": true,
+                "nullable": true,
+                "example": { "security_readiness_score": 85, "has_security_md": true, "has_dependabot": true }
+            },
+            "sbom": {
+                "type": "object",
+                "description": "Software Bill of Materials summary",
+                "properties": {
+                    "status": { "type": "string", "nullable": true },
+                    "total_components": { "type": "number", "nullable": true }
+                },
+                "required": [],
+                "additionalProperties": true,
+                "nullable": true,
+                "example": { "status": "completed", "total_components": 45 }
+            }
+        },
+        "required": [],
+        "additionalProperties": true
+    },
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "description": "Composite health score, letter grade, risk rating, and core repository metrics",
+            "transformation": {
+                "fields": [
+                    "repo_name",
+                    "health_score",
+                    "health_grade",
+                    "risk_level",
+                    "stars",
+                    "forks",
+                    "language",
+                    "recommendation_count",
+                    "last_commit"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "repo_name": { "label": "Repository", "format": "text" },
+                    "health_score": { "label": "Score", "format": "number" },
+                    "health_grade": { "label": "Grade", "format": "text" },
+                    "risk_level": { "label": "Risk", "format": "text" },
+                    "stars": { "label": "Stars", "format": "number" },
+                    "forks": { "label": "Forks", "format": "number" },
+                    "language": { "label": "Language", "format": "text" },
+                    "recommendation_count": { "label": "Actions", "format": "number" },
+                    "last_commit": { "label": "Last Commit", "format": "date" }
+                }
+            }
+        },
+        "scores": {
+            "title": "7 Pillars Breakdown",
+            "description": "Detailed scores across all seven health pillars",
+            "transformation": {
+                "fields": [
+                    "repo_name",
+                    "health_score",
+                    "readability_score",
+                    "stability_score",
+                    "security_score",
+                    "community_score",
+                    "maintainability_score",
+                    "documentation_score",
+                    "automation_score"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "repo_name": { "label": "Repository", "format": "text" },
+                    "health_score": { "label": "Total", "format": "number" },
+                    "readability_score": { "label": "Readability", "format": "number" },
+                    "stability_score": { "label": "Stability", "format": "number" },
+                    "security_score": { "label": "Security", "format": "number" },
+                    "community_score": { "label": "Community", "format": "number" },
+                    "maintainability_score": { "label": "Maintainability", "format": "number" },
+                    "documentation_score": { "label": "Documentation", "format": "number" },
+                    "automation_score": { "label": "Automation", "format": "number" }
+                }
+            }
+        },
+        "security": {
+            "title": "Security & Governance",
+            "description": "Vulnerability policy, Dependabot, and open source license status",
+            "transformation": {
+                "fields": [
+                    "repo_name",
+                    "license_type",
+                    "license_risk",
+                    "has_security_md",
+                    "dependabot_enabled",
+                    "workflow_count"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "repo_name": { "label": "Repository", "format": "text" },
+                    "license_type": { "label": "License", "format": "text" },
+                    "license_risk": { "label": "License Risk", "format": "text" },
+                    "has_security_md": { "label": "SECURITY.md", "format": "text" },
+                    "dependabot_enabled": { "label": "Dependabot", "format": "text" },
+                    "workflow_count": { "label": "Workflows", "format": "number" }
+                }
+            }
+        },
+        "tips": {
+            "title": "Recommendations",
+            "description": "Actionable improvements and prioritized action items",
+            "transformation": {
+                "fields": [
+                    "repo_name",
+                    "health_score",
+                    "recommendation_count",
+                    "top_recommendations"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "repo_name": { "label": "Repository", "format": "text" },
+                    "health_score": { "label": "Score", "format": "number" },
+                    "recommendation_count": { "label": "Action Count", "format": "number" },
+                    "top_recommendations": { "label": "Top Actions", "format": "text" }
+                }
+            }
+        }
+    }
+}
+
